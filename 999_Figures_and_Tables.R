@@ -7,9 +7,11 @@
 library(plyr)
 library(reshape2)
 library(ggplot2)
+library(magrittr)
 
 
 load("Vit_Reg_h2.RData", verbose = T)
+load("soayimp_genotype_data.RData")
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # 1. Format Animal Model Results                     #
@@ -80,8 +82,6 @@ ggsave("figs/1_Animal_Model_Fixed.png", width = 7, height =5 )
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 
 gwas.results <- read.table("results/2_SEJ_GWAS_Results_600K.txt", header = T, stringsAsFactors = F)
-gwas.results <- subset(gwas.results, Age == "All")
-
 
 gwas.results$Model <- factor(gwas.results$Model, levels = c("25(OH)D", "25(OH)D2", "25(OH)D3"))
 
@@ -89,16 +89,15 @@ gwas.results <- arrange(gwas.results, Pc1df)
 
 tophits <- NULL
 
-for(i in unique(gwas.results$Age)){
+
+
+for(j in unique(gwas.results$Model)){
   
-  for(j in unique(gwas.results$Model)){
-    
-    tophits <- rbind(tophits,
-                     subset(gwas.results, Age == i & Model == j)[1:30,])
-    
-  }
+  tophits <- rbind(tophits,
+                   subset(gwas.results, Model == j)[1:30,])
   
 }
+
 
 gwas.results <- arrange(gwas.results, Cumu)
 
@@ -134,7 +133,7 @@ ggplot(gwas.results, aes(Cumu,-log10(Pc1df), col = factor(Chromosome %% 2))) +
   scale_colour_manual(values = c("darkgreen", "grey60")) +
   labs(x ="Chromosome", y = expression("-log"[10]*"P")) +
   facet_wrap(~Model, ncol = 1)
-  
+
 dev.off()
 
 png("figs/2_SEJ_GWAS_600K_PP.png", width = 4, height = 12, units = "in", res = 300)
@@ -158,6 +157,82 @@ ggplot(gwas.results, aes(-log10(ExpP),-log10(Pc1df))) +
 dev.off()
 
 
+#~~ Chromosome 18 region
+
+chr18 <- subset(gwas.results, Model == "25(OH)D2" & Chromosome == 18 & Position > 64.3e6)
+
+library(GenABEL)
+library(reshape2)
+soay18 <- soayimp[,chromosome(soayimp) == 18]
+soay18 <- soay18[,map(soay18) > 64e6]
+nsnps(soay18)
+
+ld18 <- r2fast(soay18)
+ld18 <- ld18 %>% melt
+ld18 <- subset(ld18, value < 1.01)
+ld18$Var1 <- as.character(ld18$Var1 )
+ld18$Var2 <- as.character(ld18$Var2 )
+
+
+topsnp <- c(which(ld18$Var1 == "oar3_OAR18_68320039"), which(ld18$Var2 == "oar3_OAR18_68320039")) %>% unique
+ld18 <- ld18[topsnp,]
+ld18$SNP.Name <- ifelse(ld18$Var1 == "oar3_OAR18_68320039", ld18$Var2, ld18$Var1)
+ld18 <- subset(ld18, select = c(SNP.Name, value))
+chr18 <- join(chr18, ld18)
+chr18
+
+
+
+ggplot(chr18, aes(Position/1e6,-log10(Pc1df), fill = value)) +
+  geom_point(shape = 21, size = 3, alpha = 0.8, colour = "black") +
+  geom_hline(yintercept=-log10(1.28e-6), linetype=2, alpha = 0.6, size = 1) +
+  theme_bw() +
+  theme(axis.text.x  = element_text (size = 12),
+        axis.text.y  = element_text (size = 14),
+        strip.text.x = element_text (size = 14, hjust = 0),
+        strip.text.y = element_text (size = 14),
+        axis.title.y = element_text (size = 14, angle = 90),
+        axis.title.x = element_text (size = 14),
+        strip.background = element_rect(fill = "white"),
+        legend.text = element_text(size = 14),
+        legend.title = element_text(size = 14),) +
+  scale_fill_gradient(low = "white", high = "red") +
+  labs(x = "Chromosome 18 Position (Mb)", y = expression("Observed -log"[10]*"P"), fill = "LD (r2)")
+ggsave("figs/2_Chr_18_Region.png", width = 10, height =4 )
+
+
+#~~ Plot genes
+
+chr18genes <- read.table("results/3_Top_Genes_v4.txt", header = T, stringsAsFactors = F, sep = "\t")
+chr18genes <- subset(chr18genes, gene_biotype == "protein_coding")
+
+chr18orthos <- read.table("results/3_Top_Orthologous_Regions_v4.txt", header = T, stringsAsFactors = F, sep = "\t")
+chr18orthos <- subset(chr18orthos, Species == "hsapiens")
+chr18orthos <- subset(chr18orthos, select = c(Gene.stable.ID, Gene.name.1, Chromosome.scaffold.name, Gene.start..bp.,Gene.end..bp.)) %>% unique
+names(chr18orthos) <- c("ensembl_gene_id", "Human_Orthologue", "human_chromosome_name", "human_start_position", "human_end_position")
+
+
+chr18genes <- join(chr18genes, chr18orthos)
+chr18genes$gene_size <- chr18genes$end_position - chr18genes$start_position
+
+chr18genes$colour <- "black"
+chr18genes$colour[which(chr18genes$Human_Orthologue %in% c("DLK1", "PPP1R13B"))] <- "red"
+
+chr18genes$jitter <- rep(1:2, length.out = nrow(chr18genes))
+chr18genes$jitter[which(chr18genes$ensembl_gene_id == "ENSOARG00000007297")] <- 0
+chr18genes <- chr18genes[-grep("IGHG", chr18genes$Human_Orthologue)[2:4],]
+
+chr18genes_plot <- subset(chr18genes, select = c(ensembl_gene_id, colour, jitter, start_position, end_position))
+chr18genes_plot <- melt(chr18genes_plot, id.vars = c("ensembl_gene_id", "colour", "jitter"))
+
+ggplot(chr18genes_plot, aes(value, jitter, group = ensembl_gene_id, colour = colour)) +
+  geom_line(size = 5) +
+  scale_colour_identity() +
+  theme_bw() +
+  theme(panel.grid.minor.y=element_blank(),
+        panel.grid.major.y=element_blank()) +
+  coord_cartesian(ylim = c(-0.5, 2.5))
+ggsave("figs/2_Chr_18_Genes.png", width = 10, height =2 )
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # 3. Correlation between D2 & D3, Age plots          # 
@@ -210,5 +285,6 @@ ggsave("figs/3_VitD_Age.png", width = 10, height =4)
 #~~~ t vs t+1
 
 
-x <- subset*
 
+  
+  

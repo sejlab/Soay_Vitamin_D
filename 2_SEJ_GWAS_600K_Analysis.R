@@ -33,16 +33,16 @@ grminv2[lower.tri(grminv2)] = t(grminv2)[lower.tri(grminv2)]
 # load("../../../Soay Sheep Genomic Data/20190711 Soay Sheep 50K Data/Previous_Versions/Plates_1to87_QC3.GenABEL.RData")
 # 
 # snp50 <- snpnames(soay87)
-# snpHD <- snpnames(soayimp)
+# snpHD <- snpnames(soayimp_oar3)
 # snp50X <- snpnames(soay87[,chromosome(soay87) == 27])
 # 
 # #~~ Add SNPs that weren't imputed (includes the entire X chromosome)
 # 
-# soay87 <- soay87[,which(!snpnames(soay87) %in% snpnames(soayimp))]
-# soayimp <- merge.gwaa.data(soayimp, soay87)
-# rm(soay87)
+# soay87 <- soay87[,which(!snpnames(soay87) %in% snpnames(soayimp_oar3))]
+# soayimp <- merge.gwaa.data(soayimp_oar3, soay87)
+# rm(soay87, soayimp_oar3)
 # save(soayimp, file = "soayimp_genotype_data.RData")
-
+ 
 load("soayimp_genotype_data.RData")
 
 
@@ -86,11 +86,9 @@ for(i in na.omit(unique(mapdata$Chr))){
 chrinfo$Mid <- chrinfo$Start + ((chrinfo$Stop - chrinfo$Start)/2)
 
 
-bonf = 3.858528e-07
-
 mapdata <- subset(mapdata, select = c(SNP.Name, Cumu))
 
-firstRun <- FALSE
+firstRun <- TRUE
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # 1. Run the GWASs                                     #
@@ -176,7 +174,7 @@ if(firstRun){
   gwasvitd3 <- process_rGLSadj_results(gwasvitd3, soayimp)
   
   
-  save(gwasvitd, gwasvitd2, gwasvitd3, file = "results/gwasvitd.RData")
+  save(gwasvitd, gwasvitd2, gwasvitd3, file = "results/gwasvitd_v2.RData")
   rm(gwasvitd, gwasvitd2, gwasvitd3, gwasvitd_prefit, gwasvitd2_prefit, gwasvitd3_prefit)
   
   gc()
@@ -184,7 +182,7 @@ if(firstRun){
   
 }
 
-load("results/gwasvitd.RData")
+load("results/gwasvitd_v2.RData")
 
 gwas.results <- rbind(cbind(gwasvitd, Age = "All", Model = "Total"),
                       cbind(gwasvitd2, Age = "All", Model = "D2"),
@@ -213,7 +211,7 @@ gwas.results <- join(gwas.results, mapdata)
 gwas.results <- gwas.results[,c("Model", "SNP.Name", "Chromosome", "Position", "A1", "A2", "effB", "se_effB", 
                                "chi2.1df", "P1df", "Pc1df",  "ExpP",  
                                "Q.2", "Cumu")]
-
+gwas.results$Model <- as.character(gwas.results$Model)
 gwas.results$Model[which(gwas.results$Model == "Total")] <- "25(OH)D"
 gwas.results$Model[which(gwas.results$Model == "D2")] <- "25(OH)D2"
 gwas.results$Model[which(gwas.results$Model == "D3")] <- "25(OH)D3"

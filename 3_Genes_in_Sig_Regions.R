@@ -56,7 +56,7 @@ temp <- subset(tophits, select = c(SNP.Name, Pc1df))
 topregions_withSNP <- join(topregions, temp)
 
 
-genedist <- 1e6
+genedist <- 4e6
 
 topgenes <- list()
 
