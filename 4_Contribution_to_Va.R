@@ -143,3 +143,30 @@ pchisq(2*(anmodd3$loglik - anmodd3_old), 1, lower.tail = F)
 raneff3 <- summary.asreml(anmodd3, coef = T)$varcomp
 raneff3 <- raneff3[-nrow(raneff3),]
 raneff3 <- cbind(raneff3, asreml4pin(anmodd3))
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# 3. Effect sizes                                        #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+library(GenABEL)
+load("soayimp_genotype_data.RData")
+x <- as.character.gwaa.data(soayimp[,"oar3_OAR18_68320039"]) %>% data.frame
+x$ID <- row.names(x)
+head(x)
+str(x)
+x$ID <- as.character(x$ID)
+
+vitdped <- join(vitdped, x)
+head(vitdped)
+
+anmodd2 <- asreml(fixed = X25OHD2~1+Sex+Age+Age2+YearF+oar3_OAR18_68320039, #etc etc
+                  random = ~ vm(ID, grminv) + ide(ID) +MumID+BirthYearF,   #vm(ID, ainv) is the relatedness matricx, ide(ID) is the individual identity
+                  data = vitdped,
+                  na.action = na.method(x = "omit", y = "omit"), residual = ~idv(units)) # include this line
+
+wald.asreml(anmodd2)
+summary.asreml(anmodd2, coef = T)$coef.fixed # Fixed effects
+summary.asreml(anmodd2, coef = T)$varcomp    # random effects
+asreml4pin(anmodd2)
+
