@@ -27,7 +27,7 @@ ranef.results$Model[which(ranef.results$Model == "D3")] <- "25(OH)D3"
 
 ggplot(ranef.results, aes(Model, Estimate, fill = Effect2)) +
   geom_bar(stat = "identity", col = "grey20") +
-  scale_fill_brewer(palette = "Set3") +
+  scale_fill_manual(values = rev(c("aquamarine4", "lightgreen", "plum4", "skyblue3", "gray88"))) +
   scale_x_discrete(labels = c("25(OH)D", expression("25(OH)D"[2]), expression("25(OH)D"[3]))) +
   labs(fill = "", x = "Vitamin D Measure", y = "Proportion of Phenotypic Variance") +
   theme_bw() +
@@ -39,6 +39,8 @@ ggplot(ranef.results, aes(Model, Estimate, fill = Effect2)) +
         axis.title.y = element_text (size = 14, angle = 90),
         axis.title.x = element_text (size = 14),
         legend.text = element_text(size = 12))
+
+
 ggsave("figs/1_Animal_Model_All.png", width = 7, height =7 )
 
 
@@ -130,7 +132,7 @@ ggplot(gwas.results, aes(Cumu,-log10(Pc1df), col = factor(Chromosome %% 2))) +
         axis.title.x = element_text (size = 16),
         strip.background = element_rect(fill = "white")) +
   scale_x_continuous(breaks = chrinfo$Mid, labels = chrinfo$Chr2) +
-  scale_colour_manual(values = c("darkgreen", "grey60")) +
+  scale_colour_manual(values = c("aquamarine4", "grey60")) +
   labs(x ="Chromosome", y = expression("-log"[10]*"P")) +
   facet_wrap(~Model, ncol = 1)
 
