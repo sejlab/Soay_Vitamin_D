@@ -17,47 +17,48 @@ source("r/ASReml4.EstEffects.R")
 
 load("Vit_Reg_h2.RData", verbose = T)
 
-setwd("../../../Soay Sheep Genomic Data/20190711 Soay Sheep 50K Data/Previous_Versions/")
-
-maptab <- read.table("Plates_1to87_QC3.bim", stringsAsFactors = F)
 
 attr(grminv, which = "INVERSE") <- TRUE
 
-gwas.results <- read.table("results/2_SEJ_GWAS_Results_600K.txt", header = T, stringsAsFactors = F, sep = "\t")
-gwas.results <- subset(gwas.results, Pc1df < 1.28e-6)
+# gwas.results <- read.table("results/2_SEJ_GWAS_Results_600K.txt", header = T, stringsAsFactors = F, sep = "\t")
+# gwas.results <- subset(gwas.results, Pc1df < 1.28e-6)
+# 
+# setwd("../../../Soay Sheep Genomic Data/20190711 Soay Sheep 50K Data/Previous_Versions/")
+# 
+# maptab <- read.table("Plates_1to87_QC3.bim", stringsAsFactors = F)
+# 
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# # 1. Get our 50K SNPs for constructing GRM               #
+# #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# 
+# x <- subset(maptab, V1 == 18)
+# 
+# xless <- which(x$V4 < gwas.results$Position[1])
+# xless <- xless[length(xless)]
+# xless
+# 
+# x[c((xless - 9):(xless+10)),]
+# 
+# snplist <- x[c((nrow(x)-19):nrow(x)),"V2"]
+# 
+# writeLines(snplist, "vitd_list.txt")
+# 
+# system(paste0("gcta64.exe --bfile Plates_1to87_QC3 --autosome --autosome-num 26 --extract vitd_list.txt --make-grm-gz --out vitD_reg_GRM" ))
+# system(paste0("gcta64.exe --grm-gz vitD_reg_GRM --grm-adj 0 --make-grm-gz --out vitD_reg_GRM.adj"))
+# 
+# grm.region <- read.table("vitD_reg_GRM.adj.grm.gz")  # CONTAINS REALIZED RELATEDNESS BETWEEN ALL GENOTYPED INDIVIDUALS
+# ids.region <- read.table("vitD_reg_GRM.adj.grm.id")  # CONTAINS ID LIST
+# 
+# grmreg <- makeGRM(grm.region, ids.region, id.vector = VITD$ID) # vector of IDs from the datasset that you use for the asreml model
+# dim(grmreg)
+# 
+# attr(grmreg, which = "INVERSE") <- TRUE
+# 
+# setwd("../../../Soay Sheep Projects/Vitamin_D/20191004_Vitamin_D/")
+#
+# save(grmreg, file = "results/4_Regional_GRM.RData")
 
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-# 1. Get our 50K SNPs for constructing GRM               #
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-
-x <- subset(maptab, V1 == 18)
-
-xless <- which(x$V4 < gwas.results$Position[1])
-xless <- xless[length(xless)]
-xless
-
-x[c((xless - 9):(xless+10)),]
-
-snplist <- x[c((nrow(x)-19):nrow(x)),"V2"]
-
-writeLines(snplist, "vitd_list.txt")
-
-system(paste0("gcta64.exe --bfile Plates_1to87_QC3 --autosome --autosome-num 26 --extract vitd_list.txt --make-grm-gz --out vitD_reg_GRM" ))
-system(paste0("gcta64.exe --grm-gz vitD_reg_GRM --grm-adj 0 --make-grm-gz --out vitD_reg_GRM.adj"))
-
-grm.region <- read.table("vitD_reg_GRM.adj.grm.gz")  # CONTAINS REALIZED RELATEDNESS BETWEEN ALL GENOTYPED INDIVIDUALS
-ids.region <- read.table("vitD_reg_GRM.adj.grm.id")  # CONTAINS ID LIST
-
-grmreg <- makeGRM(grm.region, ids.region, id.vector = VITD$ID) # vector of IDs from the datasset that you use for the asreml model
-dim(grmreg)
-
-attr(grmreg, which = "INVERSE") <- TRUE
-
-setwd("../../../Soay Sheep Projects/Vitamin_D/20191004_Vitamin_D/")
-
-save(grmreg, file = "results/4_Regional_GRM.RData")
-
+load("results/4_Regional_GRM.RData")
 vitdped$ID2 <- vitdped$ID
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#

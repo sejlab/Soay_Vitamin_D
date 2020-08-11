@@ -12,6 +12,36 @@ library(magrittr)
 
 load("Vit_Reg_h2.RData", verbose = T)
 load("soayimp_genotype_data.RData")
+VITD <- read.table("data_for_paper/VitD_MS_Data_240720.csv", header = T, sep = ",")
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+# 0. Sample Sizes                                    #
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+table(VITD$Sex)
+table(VITD$AgeGroupF)
+table(VITD$Year)
+
+table(vitdped$Sex)
+table(vitdped$AgeGroupF)
+table(vitdped$Year)
+
+VITDx <- subset(VITD, select = c(Sex, ID)) %>% unique
+table(VITDx$Sex)
+VITDx <- subset(VITD, select = c(AgeGroupF, ID)) %>% unique
+table(VITDx$AgeGroupF)
+VITDx <- subset(VITD, select = c(Year, ID)) %>% unique
+table(VITDx$Year)
+
+VITDx <- subset(vitdped, select = c(Sex, ID)) %>% unique
+table(VITDx$Sex)
+VITDx <- subset(vitdped, select = c(AgeGroupF, ID)) %>% unique
+table(VITDx$AgeGroupF)
+VITDx <- subset(vitdped, select = c(Year, ID)) %>% unique
+table(VITDx$Year)
+
+rm(VITx)
+
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # 1. Format Animal Model Results                     #
@@ -20,7 +50,9 @@ load("soayimp_genotype_data.RData")
 ranef.results <- read.table("results/0_Animal_Model_Random_Effects.txt", header = T, stringsAsFactors = F, sep = "\t")
 
 ranef.results$Age <- factor(ranef.results$Age, levels = c("Lambs", "Adults", "All"))
-ranef.results$Effect2 <- factor(ranef.results$Effect2, levels = rev(c("Additive Genetic", "Permanent Environment", "Maternal", "Birth Year",  "Residual")))
+ranef.results$Effect2[which(ranef.results$Effect2 == "Maternal")] <- "Maternal Identity"
+
+ranef.results$Effect2 <- factor(ranef.results$Effect2, levels = rev(c("Additive Genetic", "Permanent Environment", "Maternal Identity", "Birth Year",  "Residual")))
 ranef.results$Model[which(ranef.results$Model == "Total")] <- "25(OH)D"
 ranef.results$Model[which(ranef.results$Model == "D2")] <- "25(OH)D2"
 ranef.results$Model[which(ranef.results$Model == "D3")] <- "25(OH)D3"
