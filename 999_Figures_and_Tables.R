@@ -43,6 +43,9 @@ table(VITDx$Year)
 rm(VITx)
 
 
+VITD %>% subset(Age > 1) %>% dplyr::group_by(Sex) %>% dplyr::summarise(Weight = mean(Weight)) %>% na.omit
+
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # 1. Format Animal Model Results                     #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#

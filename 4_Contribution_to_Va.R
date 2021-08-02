@@ -152,11 +152,17 @@ raneff3 <- cbind(raneff3, asreml4pin(anmodd3))
 
 library(GenABEL)
 load("soayimp_genotype_data.RData")
-x <- as.character.gwaa.data(soayimp[,"oar3_OAR18_68320039"]) %>% data.frame
+
+
+x <- as.character.gwaa.data(soayimp[,c("oar3_OAR18_68320039", "oar3_OAR18_68398710", "oar3_OAR18_68401733", "oar3_OAR18_68448747")]) %>% data.frame
 x$ID <- row.names(x)
 head(x)
 str(x)
 x$ID <- as.character(x$ID)
+
+cor.test(as.numeric(x$oar3_OAR18_68320039), as.numeric(x$oar3_OAR18_68398710))
+cor.test(as.numeric(x$oar3_OAR18_68320039), as.numeric(x$oar3_OAR18_68401733))
+cor.test(as.numeric(x$oar3_OAR18_68320039), as.numeric(x$oar3_OAR18_68448747))
 
 vitdped <- join(vitdped, x)
 head(vitdped)

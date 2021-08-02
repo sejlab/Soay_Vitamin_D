@@ -17,6 +17,12 @@ source("r/ASReml4.EstEffects.R")
 
 attr(grminv, which = "INVERSE") <- TRUE
 
+vitdped$Age2 <- vitdped$Age^2
+vitdped$YearF <- factor(vitdped$Year)
+vitdped$BirthYearF <- factor(vitdped$BirthYear)
+vitdped$Weight2 <- vitdped$Weight^2
+
+
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
 # 1. Animal Models                                       #
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
@@ -26,6 +32,7 @@ attr(grminv, which = "INVERSE") <- TRUE
 anmodtotvitd <- asreml(fixed = Total.25D~1+Sex+Age+Age2+YearF, #etc etc
                        random = ~ vm(ID, grminv) + ide(ID) + MumID +BirthYearF,   #vm(ID, ainv) is the relatedness matricx, ide(ID) is the individual identity
                        data = vitdped,
+                       na.action = na.method(x = "omit"),
                        residual = ~idv(units)) # include this line
 
 wald.asreml(anmodtotvitd)
